@@ -1,20 +1,20 @@
-package main
+package todo
 
 import (
 	"context"
 	"database/sql"
 )
 
-type todoStore struct {
+type Store struct {
 	db *sql.DB
 }
 
-func newTodoStore(db *sql.DB) *todoStore {
+func NewStore(db *sql.DB) *Store {
 	// 数据访问层封装
-	return &todoStore{db: db}
+	return &Store{db: db}
 }
 
-func (s *todoStore) List(ctx context.Context) ([]Todo, error) {
+func (s *Store) List(ctx context.Context) ([]Todo, error) {
 	// 查询全部 todo
 	rows, err := s.db.QueryContext(ctx, `
 		SELECT id, title, done, created_at, updated_at
@@ -40,7 +40,7 @@ func (s *todoStore) List(ctx context.Context) ([]Todo, error) {
 	return todos, nil
 }
 
-func (s *todoStore) Get(ctx context.Context, id int64) (Todo, error) {
+func (s *Store) Get(ctx context.Context, id int64) (Todo, error) {
 	// 按 ID 查询
 	var todo Todo
 	row := s.db.QueryRowContext(ctx, `
@@ -54,7 +54,7 @@ func (s *todoStore) Get(ctx context.Context, id int64) (Todo, error) {
 	return todo, nil
 }
 
-func (s *todoStore) Create(ctx context.Context, input createTodoRequest) (Todo, error) {
+func (s *Store) Create(ctx context.Context, input createTodoRequest) (Todo, error) {
 	// 新建 todo
 	var todo Todo
 	row := s.db.QueryRowContext(ctx, `
@@ -68,7 +68,7 @@ func (s *todoStore) Create(ctx context.Context, input createTodoRequest) (Todo, 
 	return todo, nil
 }
 
-func (s *todoStore) Update(ctx context.Context, id int64, input updateTodoRequest) (Todo, error) {
+func (s *Store) Update(ctx context.Context, id int64, input updateTodoRequest) (Todo, error) {
 	// 更新 todo（部分字段）
 	var todo Todo
 	row := s.db.QueryRowContext(ctx, `
@@ -85,7 +85,7 @@ func (s *todoStore) Update(ctx context.Context, id int64, input updateTodoReques
 	return todo, nil
 }
 
-func (s *todoStore) Delete(ctx context.Context, id int64) (bool, error) {
+func (s *Store) Delete(ctx context.Context, id int64) (bool, error) {
 	// 删除 todo
 	res, err := s.db.ExecContext(ctx, `
 		DELETE FROM todos

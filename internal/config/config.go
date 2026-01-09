@@ -17,7 +17,7 @@ func Load(defaultAddr string) Config {
 	// 从环境变量读取配置，未设置时使用默认值
 	return Config{
 		Addr:         getEnv("ADDR", defaultAddr),
-		DatabaseURL:  getEnv("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/go_api?sslmode=disable"),
+		DatabaseURL:  getEnv("DATABASE_URL", "postgres://postgres:123456@localhost:5432/go_api?sslmode=disable"),
 		ReadTimeout:  getEnvDuration("READ_TIMEOUT", 5*time.Second),
 		WriteTimeout: getEnvDuration("WRITE_TIMEOUT", 10*time.Second),
 		IdleTimeout:  getEnvDuration("IDLE_TIMEOUT", 120*time.Second),

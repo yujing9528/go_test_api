@@ -12,13 +12,13 @@ import (
 
 	"go_test/internal/config"
 	"go_test/internal/database"
-	"go_test/internal/todo"
+	"go_test/internal/stats"
 )
 
 func main() {
 	// 主流程：加载配置、连接数据库、启动 HTTP 服务并等待退出信号
-	logger := log.New(os.Stdout, "todo-api ", log.LstdFlags|log.LUTC)
-	cfg := config.Load(":8081")
+	logger := log.New(os.Stdout, "stats-api ", log.LstdFlags|log.LUTC)
+	cfg := config.Load(":8082")
 
 	db, err := database.Open(cfg.DatabaseURL, logger)
 	if err != nil {
@@ -26,7 +26,7 @@ func main() {
 	}
 	defer db.Close()
 
-	handler := todo.NewHandler(todo.NewStore(db), logger)
+	handler := stats.NewHandler(stats.NewStore(db), logger)
 
 	srv := &http.Server{
 		Addr:         cfg.Addr,
