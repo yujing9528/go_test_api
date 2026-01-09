@@ -2,18 +2,21 @@
 
 这是一个按功能模块拆分的 Go + PostgreSQL REST API 示例，用于练习路由、JSON 处理、CRUD 以及优雅退出。
 
-当前包含两个服务：
+当前包含三个服务：
 - `todo-api`：Todo 的增删改查
 - `stats-api`：Todo 的统计汇总
+- `user-api`：用户注册、登录、重置密码、修改资料
 
 ## 目录结构
 
 - `cmd/todo-api`：Todo 服务入口
 - `cmd/stats-api`：统计服务入口
+- `cmd/user-api`：用户服务入口
 - `internal/config`：配置读取
 - `internal/database`：数据库连接
 - `internal/todo`：Todo 领域逻辑
 - `internal/stats`：统计领域逻辑
+- `internal/user`：用户领域逻辑
 - `migrations`：SQL 初始化脚本
 - `docker-compose.yml`：本地 PostgreSQL
 - `.env.example`：环境变量示例
@@ -31,6 +34,7 @@ docker compose up -d
 ```bash
 psql "postgres://postgres:123456@localhost:5432/postgres?sslmode=disable" -c "CREATE DATABASE go_api;"
 psql "postgres://postgres:123456@localhost:5432/go_api?sslmode=disable" -f migrations/001_init.sql
+psql "postgres://postgres:123456@localhost:5432/go_api?sslmode=disable" -f migrations/002_users.sql
 ```
 
 如果你的数据库密码不是 `123456`，请替换连接串中的密码。
@@ -49,6 +53,12 @@ go run ./cmd/todo-api
 go run ./cmd/stats-api
 ```
 
+用户服务（默认端口 8083）：
+
+```bash
+go run ./cmd/user-api
+```
+
 ## 环境变量
 
 复制 `.env.example` 并按需修改：
@@ -62,6 +72,7 @@ go run ./cmd/stats-api
 ```bash
 ADDR=:8081 go run ./cmd/todo-api
 ADDR=:8082 go run ./cmd/stats-api
+ADDR=:8083 go run ./cmd/user-api
 ```
 
 ## API 示例
@@ -90,4 +101,44 @@ curl http://localhost:8082/health
 
 ```bash
 curl http://localhost:8082/stats
+```
+
+用户服务（示例会返回 session token，用于访问 /users/me）：
+
+```bash
+curl -X POST http://localhost:8083/users/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"demo@example.com","password":"password123","name":"Demo"}'
+```
+
+```bash
+curl -X POST http://localhost:8083/users/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"demo@example.com","password":"password123"}'
+```
+
+```bash
+curl http://localhost:8083/users/me \
+  -H "Authorization: Bearer <token>"
+```
+
+```bash
+curl -X PUT http://localhost:8083/users/me \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"New Name"}'
+```
+
+重置密码流程（学习用途，会直接返回 token）：
+
+```bash
+curl -X POST http://localhost:8083/users/password/forgot \
+  -H "Content-Type: application/json" \
+  -d '{"email":"demo@example.com"}'
+```
+
+```bash
+curl -X POST http://localhost:8083/users/password/reset \
+  -H "Content-Type: application/json" \
+  -d '{"token":"<reset_token>","new_password":"newpass123"}'
 ```
