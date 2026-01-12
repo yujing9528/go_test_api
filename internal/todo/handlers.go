@@ -49,6 +49,14 @@ func (h *Handler) Routes() http.Handler {
 		})
 	})
 
+	r.Route("/practice", func(r chi.Router) {
+		r.Get("/concurrency", h.handlePracticeConcurrency)
+		r.Get("/interface", h.handlePracticeInterface)
+		r.Get("/range", h.handlePracticeRange)
+		r.Get("/slice", h.handlePracticeSlice)
+		r.Get("/map", h.handlePracticeMap)
+	})
+
 	return r
 }
 

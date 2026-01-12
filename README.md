@@ -25,9 +25,25 @@
 
 1) 启动 PostgreSQL
 
+方式一（使用项目内 docker-compose）：
+
 ```bash
 docker compose up -d
 ```
+
+方式二（复用已有 Docker 容器）：
+
+```bash
+docker start dc6d96b1072e02d68783a811f9a7bc8fd148b86e19be441bbcdcd733f63f345c
+```
+
+进入容器并打开 psql：
+
+```bash
+docker exec -it dc6d96b1072e02d68783a811f9a7bc8fd148b86e19be441bbcdcd733f63f345c psql -U postgres
+```
+
+如果容器 ID 不同，请用 `docker ps -a` 查到你自己的 ID 或容器名后替换。
 
 2) 初始化表结构
 
@@ -91,6 +107,28 @@ curl -X POST http://localhost:8081/todos \
 
 ```bash
 curl http://localhost:8081/todos
+```
+
+Todo 语法练习接口：
+
+```bash
+curl http://localhost:8081/practice/concurrency
+```
+
+```bash
+curl http://localhost:8081/practice/interface
+```
+
+```bash
+curl http://localhost:8081/practice/range
+```
+
+```bash
+curl http://localhost:8081/practice/slice
+```
+
+```bash
+curl http://localhost:8081/practice/map
 ```
 
 统计服务：
