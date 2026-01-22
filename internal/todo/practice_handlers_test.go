@@ -12,6 +12,46 @@ import (
 	"testing"
 )
 
+type practiceConcurrencyResponse struct {
+	Quotes  []orderQuote `json:"quotes"`
+	Workers int          `json:"workers"`
+}
+
+type practiceInterfaceResponse struct {
+	Amount float64        `json:"amount"`
+	Quotes []paymentQuote `json:"quotes"`
+}
+
+type practiceRangeResponse struct {
+	Items         []lineItem `json:"items"`
+	TotalQty      int        `json:"total_qty"`
+	TotalAmount   float64    `json:"total_amount"`
+	CouponLetters []string   `json:"coupon_letters"`
+}
+
+type practiceSliceResponse struct {
+	PendingOrders []string       `json:"pending_orders"`
+	QueuedOrders  []string       `json:"queued_orders"`
+	DashboardPage []string       `json:"dashboard_page"`
+	PickList      []string       `json:"pick_list"`
+	CopyCount     int            `json:"copy_count"`
+	Lengths       map[string]int `json:"lengths"`
+	Capacities    map[string]int `json:"capacities"`
+}
+
+type practiceMapLookup struct {
+	Member string `json:"member"`
+	Points int    `json:"points"`
+	Ok     bool   `json:"ok"`
+}
+
+type practiceMapResponse struct {
+	Leaderboard []leaderboardItem `json:"leaderboard"`
+	Lookup      practiceMapLookup `json:"lookup"`
+	Missing     practiceMapLookup `json:"missing"`
+	Count       int               `json:"count"`
+}
+
 func newPracticeTestRouter() http.Handler {
 	logger := log.New(io.Discard, "", 0)
 	handler := NewHandler(nil, logger)
@@ -42,10 +82,7 @@ func TestPracticeConcurrency(t *testing.T) {
 		t.Fatalf("unexpected status: %d", rec.Code)
 	}
 
-	var res struct {
-		Quotes  []orderQuote `json:"quotes"`
-		Workers int          `json:"workers"`
-	}
+	var res practiceConcurrencyResponse
 	decodeResponse(t, rec, &res)
 
 	if res.Workers != 3 {
@@ -84,10 +121,7 @@ func TestPracticeInterface(t *testing.T) {
 		t.Fatalf("unexpected status: %d", rec.Code)
 	}
 
-	var res struct {
-		Amount float64        `json:"amount"`
-		Quotes []paymentQuote `json:"quotes"`
-	}
+	var res practiceInterfaceResponse
 	decodeResponse(t, rec, &res)
 
 	assertFloatApprox(t, res.Amount, 200)
@@ -122,12 +156,7 @@ func TestPracticeRange(t *testing.T) {
 		t.Fatalf("unexpected status: %d", rec.Code)
 	}
 
-	var res struct {
-		Items         []lineItem `json:"items"`
-		TotalQty      int        `json:"total_qty"`
-		TotalAmount   float64    `json:"total_amount"`
-		CouponLetters []string   `json:"coupon_letters"`
-	}
+	var res practiceRangeResponse
 	decodeResponse(t, rec, &res)
 
 	expectedItems := []lineItem{
@@ -169,15 +198,7 @@ func TestPracticeSlice(t *testing.T) {
 		t.Fatalf("unexpected status: %d", rec.Code)
 	}
 
-	var res struct {
-		PendingOrders []string       `json:"pending_orders"`
-		QueuedOrders  []string       `json:"queued_orders"`
-		DashboardPage []string       `json:"dashboard_page"`
-		PickList      []string       `json:"pick_list"`
-		CopyCount     int            `json:"copy_count"`
-		Lengths       map[string]int `json:"lengths"`
-		Capacities    map[string]int `json:"capacities"`
-	}
+	var res practiceSliceResponse
 	decodeResponse(t, rec, &res)
 
 	if !reflect.DeepEqual(res.PendingOrders, []string{"ORD-2001", "ORD-2002", "ORD-2003"}) {
@@ -223,20 +244,7 @@ func TestPracticeMap(t *testing.T) {
 		t.Fatalf("unexpected status: %d", rec.Code)
 	}
 
-	var res struct {
-		Leaderboard []leaderboardItem `json:"leaderboard"`
-		Lookup      struct {
-			Member string `json:"member"`
-			Points int    `json:"points"`
-			Ok     bool   `json:"ok"`
-		} `json:"lookup"`
-		Missing struct {
-			Member string `json:"member"`
-			Points int    `json:"points"`
-			Ok     bool   `json:"ok"`
-		} `json:"missing"`
-		Count int `json:"count"`
-	}
+	var res practiceMapResponse
 	decodeResponse(t, rec, &res)
 
 	expectedItems := []leaderboardItem{

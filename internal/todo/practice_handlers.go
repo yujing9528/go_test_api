@@ -7,20 +7,21 @@ import (
 	"sync"
 )
 
-type paymentMethod interface {
-	// Name 返回支付方式标识，用于输出与分流逻辑。
-	Name() string
+type paymentFeeCalculator interface {
 	// Fee 根据订单金额计算手续费。
 	Fee(amount float64) float64
+}
+
+type paymentMethodEntry struct {
+	// Name 对应前端展示或渠道标识。
+	Name string
+	// Calculator 封装不同支付方式的手续费规则。
+	Calculator paymentFeeCalculator
 }
 
 type cardPayment struct {
 	Rate  float64
 	Fixed float64
-}
-
-func (c cardPayment) Name() string {
-	return "card"
 }
 
 func (c cardPayment) Fee(amount float64) float64 {
@@ -31,20 +32,12 @@ type walletPayment struct {
 	Rate float64
 }
 
-func (w walletPayment) Name() string {
-	return "wallet"
-}
-
 func (w walletPayment) Fee(amount float64) float64 {
 	return amount * w.Rate
 }
 
 type bankTransfer struct {
 	FeeAmount float64
-}
-
-func (b bankTransfer) Name() string {
-	return "bank_transfer"
 }
 
 func (b bankTransfer) Fee(amount float64) float64 {
@@ -70,6 +63,12 @@ type orderQuote struct {
 	Discount float64 `json:"discount"`
 	Shipping float64 `json:"shipping"`
 	Total    float64 `json:"total"`
+}
+
+type orderLineInput struct {
+	SKU       string
+	Qty       int
+	UnitPrice float64
 }
 
 type lineItem struct {
@@ -146,17 +145,17 @@ func (h *Handler) handlePracticeInterface(w http.ResponseWriter, r *http.Request
 	// - amount: 订单金额
 	// - quotes: 不同支付方式的手续费与最终金额
 	amount := 200.0
-	methods := []paymentMethod{
-		cardPayment{Rate: 0.02, Fixed: 1},
-		walletPayment{Rate: 0.01},
-		bankTransfer{FeeAmount: 3},
+	methods := []paymentMethodEntry{
+		{Name: "card", Calculator: cardPayment{Rate: 0.02, Fixed: 1}},
+		{Name: "wallet", Calculator: walletPayment{Rate: 0.01}},
+		{Name: "bank_transfer", Calculator: bankTransfer{FeeAmount: 3}},
 	}
 
 	quotes := make([]paymentQuote, 0, len(methods))
 	for _, method := range methods {
-		fee := roundTwo(method.Fee(amount))
+		fee := roundTwo(method.Calculator.Fee(amount))
 		quotes = append(quotes, paymentQuote{
-			Method:      method.Name(),
+			Method:      method.Name,
 			Fee:         fee,
 			FinalAmount: roundTwo(amount + fee),
 		})
@@ -175,11 +174,7 @@ func (h *Handler) handlePracticeRange(w http.ResponseWriter, r *http.Request) {
 	// - total_qty: 商品总数量
 	// - total_amount: 订单总金额
 	// - coupon_letters: 优惠码拆分结果
-	items := []struct {
-		SKU       string
-		Qty       int
-		UnitPrice float64
-	}{
+	items := []orderLineInput{
 		{SKU: "SKU-1001", Qty: 2, UnitPrice: 19.9},
 		{SKU: "SKU-2002", Qty: 1, UnitPrice: 49.5},
 		{SKU: "SKU-3003", Qty: 3, UnitPrice: 9.9},
