@@ -248,12 +248,17 @@ func (h *Handler) handlePracticeMap(w http.ResponseWriter, r *http.Request) {
 	// - leaderboard: 按会员名排序的积分列表
 	// - lookup/missing: 命中与未命中的查找结果
 	// - count: 当前会员数量
-	loyaltyPoints := map[string]int{
+	loyaltyPoints := map[string]any{
 		"alice": 1200,
 		"bob":   800,
 		"carol": 1500,
+		"info": map[string]any{
+			"level": "gold",
+			"since": "2022-01-15",
+		},
 	}
-	loyaltyPoints["dave"] = 950
+	loyaltyPoints["dave"] = 9527
+	loyaltyPoints["ali"] = 9528
 	delete(loyaltyPoints, "bob")
 
 	keys := make([]string, 0, len(loyaltyPoints))
@@ -264,13 +269,18 @@ func (h *Handler) handlePracticeMap(w http.ResponseWriter, r *http.Request) {
 
 	leaderboard := make([]leaderboardItem, 0, len(keys))
 	for _, k := range keys {
-		leaderboard = append(leaderboard, leaderboardItem{Member: k, Points: loyaltyPoints[k]})
+		points, yes := loyaltyPoints[k].(int)
+		if !yes {
+			continue
+		}
+		leaderboard = append(leaderboard, leaderboardItem{Member: k, Points: points})
 	}
 
 	value, ok := loyaltyPoints["carol"]
 	missingValue, missingOK := loyaltyPoints["zoe"]
 
 	h.writeJSON(w, http.StatusOK, map[string]any{
+		"keys":        keys,
 		"leaderboard": leaderboard,
 		"lookup": map[string]any{
 			"member": "carol",
